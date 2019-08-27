@@ -6,6 +6,7 @@ use std::time;
 const MACHINE_MAN_PREVIEW: &'static str =
     "application/vnd.github.machine-man-preview+json";
 
+#[derive(Debug)]
 pub enum AuthError {
     JwtError(jsonwebtoken::errors::Error),
     InvalidHeaderValue(http::header::InvalidHeaderValue),
