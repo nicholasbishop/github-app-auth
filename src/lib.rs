@@ -85,7 +85,7 @@ struct RawInstallationToken {
 /// Reference:
 /// developer.github.com/apps/building-github-apps/authenticating-with-github-apps
 fn get_installation_token(
-    client: &reqwest::Client,
+    client: &reqwest::blocking::Client,
     params: &GithubAuthParams,
 ) -> Result<RawInstallationToken, AuthError> {
     let claims = JwtClaims::new(params)?;
@@ -113,11 +113,11 @@ fn get_installation_token(
 /// An installation token is the primary method for authenticating
 /// with the GitHub API as an application.
 pub struct InstallationToken {
-    /// The `reqwest::Client` used to periodically refresh the token.
+    /// The `reqwest::blocking::Client` used to periodically refresh the token.
     ///
     /// This is made public so that users of the library can re-use
     /// this client for sending requests, but this is not required.
-    pub client: reqwest::Client,
+    pub client: reqwest::blocking::Client,
 
     token: String,
     fetch_time: time::SystemTime,
@@ -130,7 +130,7 @@ impl InstallationToken {
     pub fn new(
         params: GithubAuthParams,
     ) -> Result<InstallationToken, AuthError> {
-        let client = reqwest::Client::new();
+        let client = reqwest::blocking::Client::new();
         let raw = get_installation_token(&client, &params)?;
         Ok(InstallationToken {
             client,
