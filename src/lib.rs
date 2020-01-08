@@ -29,7 +29,7 @@ use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
 use std::time;
 
-const MACHINE_MAN_PREVIEW: &'static str =
+const MACHINE_MAN_PREVIEW: &str =
     "application/vnd.github.machine-man-preview+json";
 
 /// Authentication error enum.
@@ -136,7 +136,7 @@ impl InstallationToken {
             client,
             token: raw.token,
             fetch_time: time::SystemTime::now(),
-            params: params.clone(),
+            params,
         })
     }
 
