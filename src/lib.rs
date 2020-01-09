@@ -12,6 +12,7 @@
 //! // periodically refreshed. See the `GithubAuthParams` documentation
 //! // for details on how to get the private key and the two IDs.
 //! let mut token = InstallationToken::new(GithubAuthParams {
+//!     user_agent: "my-cool-user-agent".into(),
 //!     private_key: b"my private key".to_vec(),
 //!     app_id: 1234,
 //!     installation_id: 5678,
