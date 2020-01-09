@@ -130,7 +130,10 @@ impl InstallationToken {
     pub fn new(
         params: GithubAuthParams,
     ) -> Result<InstallationToken, AuthError> {
-        let client = reqwest::blocking::Client::new();
+        let client = reqwest::blocking::Client::builder()
+            .user_agent(&params.user_agent)
+            .build()
+            .map_err(AuthError::ReqwestError)?;
         let raw = get_installation_token(&client, &params)?;
         Ok(InstallationToken {
             client,
@@ -175,6 +178,14 @@ impl InstallationToken {
 /// to get an installation token.
 #[derive(Clone)]
 pub struct GithubAuthParams {
+    /// User agent set for all requests to GitHub. The API requires
+    /// that a user agent is set:
+    /// https://developer.github.com/v3/#user-agent-required
+    ///
+    /// They "request that you use your GitHub username, or the name
+    /// of your application".
+    pub user_agent: String,
+
     /// Private key used to sign access token requests. You can
     /// generate a private key at the bottom of the application's
     /// settings page.
