@@ -177,8 +177,6 @@ impl InstallationToken {
     }
 
     fn refresh(&mut self) -> Result<(), AuthError> {
-        // Installation tokens expire after 60 minutes. Refresh them
-        // after 55 minutes to give ourselves a little wiggle room.
         if self.needs_refresh() {
             info!("refreshing installation token");
             let raw = get_installation_token(&self.client, &self.params)?;
