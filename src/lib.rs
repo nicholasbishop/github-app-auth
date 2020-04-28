@@ -25,7 +25,7 @@
 //! token.client.post("https://some-github-api-url").headers(header).send();
 //! ```
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use log::info;
 use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
@@ -127,8 +127,17 @@ pub struct InstallationToken {
     pub client: reqwest::blocking::Client,
 
     token: String,
-    fetch_time: time::SystemTime,
+    expires_at: DateTime<Utc>,
     params: GithubAuthParams,
+
+    /// This time is subtracted from `expires_at` to make it less
+    /// likely that the token goes out of date just as a request is
+    /// sent.
+    ///
+    /// Currently this is not settable in the public API, it's
+    /// hardcoded to one minute. It is set differently for tests
+    /// though.
+    refresh_safety_margin: Duration,
 }
 
 impl InstallationToken {
@@ -144,8 +153,9 @@ impl InstallationToken {
         Ok(InstallationToken {
             client,
             token: raw.token,
-            fetch_time: time::SystemTime::now(),
+            expires_at: raw.expires_at,
             params,
+            refresh_safety_margin: Duration::minutes(1),
         })
     }
 
@@ -161,16 +171,19 @@ impl InstallationToken {
         Ok(headers)
     }
 
+    fn needs_refresh(&self) -> bool {
+        let expires_at = self.expires_at - self.refresh_safety_margin;
+        expires_at <= Utc::now()
+    }
+
     fn refresh(&mut self) -> Result<(), AuthError> {
-        let elapsed =
-            time::SystemTime::now().duration_since(self.fetch_time)?;
         // Installation tokens expire after 60 minutes. Refresh them
         // after 55 minutes to give ourselves a little wiggle room.
-        if elapsed.as_secs() > (55 * 60) {
+        if self.needs_refresh() {
             info!("refreshing installation token");
             let raw = get_installation_token(&self.client, &self.params)?;
             self.token = raw.token;
-            self.fetch_time = time::SystemTime::now();
+            self.expires_at = raw.expires_at;
         }
         Ok(())
     }
@@ -178,7 +191,7 @@ impl InstallationToken {
 
 /// Input parameters for authenticating as a GitHub app. This is used
 /// to get an installation token.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct GithubAuthParams {
     /// User agent set for all requests to GitHub. The API requires
     /// that a user agent is set:
@@ -231,5 +244,22 @@ mod tests {
                 expires_at: Utc.ymd(2016, 7, 11).and_hms(22, 14, 10),
             }
         );
+    }
+
+    #[test]
+    fn test_needs_refresh() {
+        use std::thread::sleep;
+        let mut token = InstallationToken {
+            client: reqwest::blocking::Client::new(),
+            token: "myToken".into(),
+            expires_at: Utc::now() + Duration::seconds(2),
+            params: GithubAuthParams::default(),
+            refresh_safety_margin: Duration::seconds(0),
+        };
+        assert!(!token.needs_refresh());
+        sleep(Duration::milliseconds(1500).to_std().unwrap());
+        assert!(!token.needs_refresh());
+        token.refresh_safety_margin = Duration::seconds(1);
+        assert!(token.needs_refresh());
     }
 }
