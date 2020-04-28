@@ -25,6 +25,7 @@
 //! token.client.post("https://some-github-api-url").headers(header).send();
 //! ```
 
+use chrono::{DateTime, Utc};
 use log::info;
 use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
@@ -81,9 +82,10 @@ impl JwtClaims {
 
 /// This is the structure of the JSON object returned when requesting
 /// an installation token.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Eq, PartialEq)]
 struct RawInstallationToken {
     token: String,
+    expires_at: DateTime<Utc>,
 }
 
 /// Use the app private key to generate a JWT and use the JWT to get
@@ -208,4 +210,26 @@ pub struct GithubAuthParams {
     /// GitHub application ID. You can find this in the application
     /// settings page on GitHub under "App ID".
     pub app_id: u64,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    #[test]
+    fn test_raw_installation_token_parse() {
+        let resp = r#"{
+            "token": "v1.1f699f1069f60xxx",
+            "expires_at": "2016-07-11T22:14:10Z"
+            }"#;
+        let token = serde_json::from_str::<RawInstallationToken>(resp).unwrap();
+        assert_eq!(
+            token,
+            RawInstallationToken {
+                token: "v1.1f699f1069f60xxx".into(),
+                expires_at: Utc.ymd(2016, 7, 11).and_hms(22, 14, 10),
+            }
+        );
+    }
 }
