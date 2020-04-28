@@ -34,16 +34,23 @@ const MACHINE_MAN_PREVIEW: &str =
     "application/vnd.github.machine-man-preview+json";
 
 /// Authentication error enum.
-#[derive(Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum AuthError {
     /// An error occurred when trying to encode the JWT.
-    JwtError(jsonwebtoken::errors::Error),
+    #[error("JWT encoding failed")]
+    JwtError(#[from] jsonwebtoken::errors::Error),
+
     /// The token cannot be encoded as an HTTP header.
-    InvalidHeaderValue(http::header::InvalidHeaderValue),
+    #[error("HTTP header encoding failed")]
+    InvalidHeaderValue(#[from] http::header::InvalidHeaderValue),
+
     /// An HTTP request failed.
-    ReqwestError(reqwest::Error),
+    #[error("HTTP request failed")]
+    ReqwestError(#[from] reqwest::Error),
+
     /// Something very unexpected happened with time itself.
-    TimeError(time::SystemTimeError),
+    #[error("system time error")]
+    TimeError(#[from] time::SystemTimeError),
 }
 
 #[derive(Debug, Serialize)]
@@ -59,8 +66,7 @@ struct JwtClaims {
 impl JwtClaims {
     fn new(params: &GithubAuthParams) -> Result<JwtClaims, AuthError> {
         let now = time::SystemTime::now()
-            .duration_since(time::UNIX_EPOCH)
-            .map_err(AuthError::TimeError)?
+            .duration_since(time::UNIX_EPOCH)?
             .as_secs();
         Ok(JwtClaims {
             // The time that this JWT was issued (now)
@@ -94,8 +100,7 @@ fn get_installation_token(
     header.alg = jsonwebtoken::Algorithm::RS256;
     let private_key =
         jsonwebtoken::EncodingKey::from_secret(&params.private_key);
-    let token = jsonwebtoken::encode(&header, &claims, &private_key)
-        .map_err(AuthError::JwtError)?;
+    let token = jsonwebtoken::encode(&header, &claims, &private_key)?;
 
     let url = format!(
         "https://api.github.com/app/installations/{}/access_tokens",
@@ -105,12 +110,9 @@ fn get_installation_token(
         .post(&url)
         .bearer_auth(token)
         .header("Accept", MACHINE_MAN_PREVIEW)
-        .send()
-        .map_err(AuthError::ReqwestError)?
-        .error_for_status()
-        .map_err(AuthError::ReqwestError)?
-        .json()
-        .map_err(AuthError::ReqwestError)?)
+        .send()?
+        .error_for_status()?
+        .json()?)
 }
 
 /// An installation token is the primary method for authenticating
@@ -135,8 +137,7 @@ impl InstallationToken {
     ) -> Result<InstallationToken, AuthError> {
         let client = reqwest::blocking::Client::builder()
             .user_agent(&params.user_agent)
-            .build()
-            .map_err(AuthError::ReqwestError)?;
+            .build()?;
         let raw = get_installation_token(&client, &params)?;
         Ok(InstallationToken {
             client,
@@ -154,17 +155,13 @@ impl InstallationToken {
         self.refresh()?;
         let mut headers = HeaderMap::new();
         let val = format!("token {}", self.token);
-        headers.insert(
-            "Authorization",
-            val.parse().map_err(AuthError::InvalidHeaderValue)?,
-        );
+        headers.insert("Authorization", val.parse()?);
         Ok(headers)
     }
 
     fn refresh(&mut self) -> Result<(), AuthError> {
-        let elapsed = time::SystemTime::now()
-            .duration_since(self.fetch_time)
-            .map_err(AuthError::TimeError)?;
+        let elapsed =
+            time::SystemTime::now().duration_since(self.fetch_time)?;
         // Installation tokens expire after 60 minutes. Refresh them
         // after 55 minutes to give ourselves a little wiggle room.
         if elapsed.as_secs() > (55 * 60) {
