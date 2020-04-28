@@ -92,7 +92,9 @@ fn get_installation_token(
     let claims = JwtClaims::new(params)?;
     let mut header = jsonwebtoken::Header::default();
     header.alg = jsonwebtoken::Algorithm::RS256;
-    let token = jsonwebtoken::encode(&header, &claims, &params.private_key)
+    let private_key =
+        jsonwebtoken::EncodingKey::from_secret(&params.private_key);
+    let token = jsonwebtoken::encode(&header, &claims, &private_key)
         .map_err(AuthError::JwtError)?;
 
     let url = format!(

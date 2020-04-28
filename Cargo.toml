@@ -10,7 +10,7 @@ repository = "https://github.com/nicholasbishop/github-app-auth"
 
 [dependencies]
 http = "0.2"
-jsonwebtoken = "6.0"
+jsonwebtoken = "7.1"
 log = "0.4"
 reqwest = { version = "0.10", features = ["blocking", "json"] }
 serde = { version = "1.0", features = ["derive"] }
