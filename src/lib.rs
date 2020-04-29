@@ -101,7 +101,7 @@ fn get_installation_token(
     let mut header = jsonwebtoken::Header::default();
     header.alg = jsonwebtoken::Algorithm::RS256;
     let private_key =
-        jsonwebtoken::EncodingKey::from_secret(&params.private_key);
+        jsonwebtoken::EncodingKey::from_rsa_pem(&params.private_key)?;
     let token = jsonwebtoken::encode(&header, &claims, &private_key)?;
 
     let url = format!(
