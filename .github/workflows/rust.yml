@@ -28,6 +28,10 @@ jobs:
           toolchain: stable
           override: true
       - uses: actions-rs/cargo@v1
+        env:
+          TEST_PRIVATE_KEY: ${{ secrets.TEST_PRIVATE_KEY }}
+          TEST_APP_ID: ${{ secrets.TEST_APP_ID }}
+          TEST_INSTALLATION_ID: ${{ secrets.TEST_INSTALLATION_ID }}
         with:
           command: test
           args: -- --ignored
