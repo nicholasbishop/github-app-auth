@@ -1,6 +1,6 @@
 use github_app_auth::{GithubAuthParams, InstallationAccessToken};
 use serde::Deserialize;
-use std::{env, ffi::OsStr, os::unix::ffi::OsStrExt};
+use std::{env, os::unix::ffi::OsStrExt};
 
 type BoxError = Box<dyn std::error::Error>;
 
@@ -26,17 +26,12 @@ fn get_var_bytes(name: &str) -> Result<Vec<u8>, BoxError> {
     Ok(value.as_bytes().into())
 }
 
-fn is_running_in_ci() -> bool {
-    env::var_os("CI") == Some(OsStr::from_bytes(b"true").into())
-}
-
-// This test requires read-only access to the repository secrets.
+// This test requires read-only access to the repository secrets. It
+// is ignored by default, but the github CI runner enables ignored
+// tests.
 #[test]
+#[ignore]
 fn get_secrets() -> Result<(), BoxError> {
-    if !is_running_in_ci() {
-        return Ok(());
-    }
-
     let private_key = get_var_bytes("TEST_PRIVATE_KEY")?;
     let app_id = env::var("TEST_APP_ID")?.parse::<u64>()?;
     let installation_id = env::var("TEST_INSTALLATION_ID")?.parse::<u64>()?;
