@@ -34,7 +34,6 @@ fn is_running_in_ci() -> bool {
 #[test]
 fn get_secrets() -> Result<(), BoxError> {
     if !is_running_in_ci() {
-        println!("skipping get_secrets test");
         return Ok(());
     }
 
