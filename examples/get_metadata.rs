@@ -26,7 +26,7 @@ fn main() -> Result<(), BoxError> {
 
     let resp = token
         .client
-        .post(&format!("https://api.github.com/repos/{}/license", repo))
+        .get(&format!("https://api.github.com/repos/{}/license", repo))
         .headers(token.header()?)
         .send()?
         .error_for_status()?
