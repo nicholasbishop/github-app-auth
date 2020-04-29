@@ -75,4 +75,5 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          command: run --example get_metadata
+          command: run
+          args: --example get_metadata
