@@ -62,9 +62,9 @@ fn get_secrets() -> Result<(), BoxError> {
         SecretsResponse {
             total_count: 3,
             secrets: vec![
-                Secret::new("TEST_PRIVATE_KEY"),
                 Secret::new("TEST_APP_ID"),
-                Secret::new("TEST_INSTALLATION_ID")
+                Secret::new("TEST_INSTALLATION_ID"),
+                Secret::new("TEST_PRIVATE_KEY"),
             ]
         }
     );
