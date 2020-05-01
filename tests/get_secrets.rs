@@ -64,6 +64,8 @@ fn check_secrets(token: &mut InstallationAccessToken) -> Result<(), BoxError> {
 #[test]
 #[ignore]
 fn get_secrets() -> Result<(), BoxError> {
+    simple_logger::init_with_level(log::Level::Info).unwrap();
+
     let private_key = get_var_bytes("TEST_PRIVATE_KEY")?;
     let app_id = env::var("TEST_APP_ID")?.parse::<u64>()?;
     let installation_id = env::var("TEST_INSTALLATION_ID")?.parse::<u64>()?;
