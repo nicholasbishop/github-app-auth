@@ -1,3 +1,4 @@
+use chrono::Duration;
 use github_app_auth::{GithubAuthParams, InstallationAccessToken};
 use serde::Deserialize;
 use std::{env, os::unix::ffi::OsStrExt};
@@ -26,25 +27,18 @@ fn get_var_bytes(name: &str) -> Result<Vec<u8>, BoxError> {
     Ok(value.as_bytes().into())
 }
 
-// This test requires read-only access to the repository secrets. It
-// is ignored by default, but the github CI runner enables ignored
-// tests.
-#[test]
-#[ignore]
-fn get_secrets() -> Result<(), BoxError> {
-    let private_key = get_var_bytes("TEST_PRIVATE_KEY")?;
-    let app_id = env::var("TEST_APP_ID")?.parse::<u64>()?;
-    let installation_id = env::var("TEST_INSTALLATION_ID")?.parse::<u64>()?;
-
+fn check_secrets(token: &mut InstallationAccessToken) -> Result<(), BoxError> {
     // Format: owner/repo
     let repo = env::var("GITHUB_REPOSITORY")?;
 
-    let mut token = InstallationAccessToken::new(GithubAuthParams {
-        user_agent: "github-app-auth-example".into(),
-        private_key,
-        app_id,
-        installation_id,
-    })?;
+    let expected_response = SecretsResponse {
+        total_count: 3,
+        secrets: vec![
+            Secret::new("TEST_APP_ID"),
+            Secret::new("TEST_INSTALLATION_ID"),
+            Secret::new("TEST_PRIVATE_KEY"),
+        ],
+    };
 
     let resp: SecretsResponse = token
         .client
@@ -57,19 +51,36 @@ fn get_secrets() -> Result<(), BoxError> {
         .error_for_status()?
         .json()?;
 
-    assert_eq!(
-        resp,
-        SecretsResponse {
-            total_count: 3,
-            secrets: vec![
-                Secret::new("TEST_APP_ID"),
-                Secret::new("TEST_INSTALLATION_ID"),
-                Secret::new("TEST_PRIVATE_KEY"),
-            ]
-        }
-    );
+    assert_eq!(resp, expected_response);
 
     println!("response: {:?}", resp);
+
+    Ok(())
+}
+
+// This test requires read-only access to the repository secrets. It
+// is ignored by default, but the github CI runner enables ignored
+// tests.
+#[test]
+#[ignore]
+fn get_secrets() -> Result<(), BoxError> {
+    let private_key = get_var_bytes("TEST_PRIVATE_KEY")?;
+    let app_id = env::var("TEST_APP_ID")?.parse::<u64>()?;
+    let installation_id = env::var("TEST_INSTALLATION_ID")?.parse::<u64>()?;
+
+    let mut token = InstallationAccessToken::new(GithubAuthParams {
+        user_agent: "github-app-auth-example".into(),
+        private_key,
+        app_id,
+        installation_id,
+    })?;
+
+    check_secrets(&mut token)?;
+
+    // Set the refresh margin to a ridiculously large value to ensure
+    // a refresh, then verify another request succeeds.
+    token.refresh_safety_margin = Duration::weeks(1);
+    check_secrets(&mut token)?;
 
     Ok(())
 }

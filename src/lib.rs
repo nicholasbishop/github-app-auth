@@ -126,18 +126,14 @@ pub struct InstallationAccessToken {
     /// this client for sending requests, but this is not required.
     pub client: reqwest::blocking::Client,
 
-    token: String,
-    expires_at: DateTime<Utc>,
-    params: GithubAuthParams,
-
     /// This time is subtracted from `expires_at` to make it less
     /// likely that the token goes out of date just as a request is
     /// sent.
-    ///
-    /// Currently this is not settable in the public API, it's
-    /// hardcoded to one minute. It is set differently for tests
-    /// though.
-    refresh_safety_margin: Duration,
+    pub refresh_safety_margin: Duration,
+
+    token: String,
+    expires_at: DateTime<Utc>,
+    params: GithubAuthParams,
 }
 
 impl InstallationAccessToken {
