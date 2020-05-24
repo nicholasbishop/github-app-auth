@@ -29,7 +29,7 @@ use chrono::{DateTime, Duration, Utc};
 use log::info;
 use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
-use std::time;
+use std::{env, time};
 
 const MACHINE_MAN_PREVIEW: &str =
     "application/vnd.github.machine-man-preview+json";
@@ -52,6 +52,14 @@ pub enum AuthError {
     /// Something very unexpected happened with time itself.
     #[error("system time error")]
     TimeError(#[from] time::SystemTimeError),
+
+    /// A variable is not set in the environment.
+    #[error("missing environment variable: {0}")]
+    MissingEnvVar(String),
+
+    /// A variable is not set in the environment.
+    #[error("invalid environment variable {0}: {1}")]
+    InvalidEnvVar(String, String),
 }
 
 #[derive(Debug, Serialize)]
@@ -218,6 +226,46 @@ pub struct GithubAuthParams {
     /// GitHub application ID. You can find this in the application
     /// settings page on GitHub under "App ID".
     pub app_id: u64,
+}
+
+impl GithubAuthParams {
+    /// Create GithubAuthParams where the private key and application
+    /// ID are read from environment variables.
+    ///
+    /// The private key is read from GITHUB_PRIVATE_KEY, which is
+    /// expected to be base64 encoded. You can use this command to
+    /// base64-encode a private key: "base64 -w0 private-key.pem"
+    ///
+    /// The application ID is read from GITHUB_APP_ID.
+    pub fn from_env(
+        user_agent: &str,
+        installation_id: u64,
+    ) -> Result<GithubAuthParams, AuthError> {
+        fn read_var(name: &str) -> Result<String, AuthError> {
+            env::var(name).map_err(|_| AuthError::MissingEnvVar(name.into()))
+        }
+
+        let app_id_name = "GITHUB_APP_ID";
+        let app_id: u64 = read_var(app_id_name)?.parse().map_err(|_| {
+            AuthError::InvalidEnvVar(
+                app_id_name.into(),
+                "invalid integer".into(),
+            )
+        })?;
+
+        let key_name = "GITHUB_PRIVATE_KEY";
+        let key_base64 = read_var(key_name)?;
+        let key = base64::decode(&key_base64).map_err(|_| {
+            AuthError::InvalidEnvVar(key_name.into(), "invalid base64".into())
+        })?;
+
+        Ok(GithubAuthParams {
+            user_agent: user_agent.into(),
+            private_key: key,
+            installation_id,
+            app_id,
+        })
+    }
 }
 
 #[cfg(test)]
