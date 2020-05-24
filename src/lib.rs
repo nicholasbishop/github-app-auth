@@ -39,19 +39,19 @@ const MACHINE_MAN_PREVIEW: &str =
 #[derive(thiserror::Error, Debug)]
 pub enum AuthError {
     /// An error occurred when trying to encode the JWT.
-    #[error("JWT encoding failed")]
+    #[error("JWT encoding failed: {0}")]
     JwtError(#[from] jsonwebtoken::errors::Error),
 
     /// The token cannot be encoded as an HTTP header.
-    #[error("HTTP header encoding failed")]
+    #[error("HTTP header encoding failed: {0}")]
     InvalidHeaderValue(#[from] http::header::InvalidHeaderValue),
 
     /// An HTTP request failed.
-    #[error("HTTP request failed")]
+    #[error("HTTP request failed: {0}")]
     ReqwestError(#[from] reqwest::Error),
 
     /// Something very unexpected happened with time itself.
-    #[error("system time error")]
+    #[error("system time error: {0}")]
     TimeError(#[from] time::SystemTimeError),
 }
 
