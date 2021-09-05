@@ -7,6 +7,7 @@ description = "Library for authenticating as a GitHub app"
 license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/nicholasbishop/github-app-auth"
+keywords = ["github", "app", "authentication"]
 
 [dependencies]
 chrono = { version = "0.4.19", default_features = false, features = ["serde"] }
