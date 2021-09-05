@@ -24,6 +24,7 @@
 //!
 //! token.client.post("https://some-github-api-url").headers(header).send();
 //! ```
+#![warn(missing_docs)]
 
 use chrono::{DateTime, Duration, Utc};
 use log::info;
