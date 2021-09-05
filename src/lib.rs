@@ -190,7 +190,7 @@ impl InstallationAccessToken {
 pub struct GithubAuthParams {
     /// User agent set for all requests to GitHub. The API requires
     /// that a user agent is set:
-    /// https://developer.github.com/v3/#user-agent-required
+    /// <https://docs.github.com/en/rest/overview/resources-in-the-rest-api#user-agent-required>
     ///
     /// They "request that you use your GitHub username, or the name
     /// of your application".
