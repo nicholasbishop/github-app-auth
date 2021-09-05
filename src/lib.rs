@@ -98,8 +98,10 @@ fn get_installation_token(
     params: &GithubAuthParams,
 ) -> Result<RawInstallationAccessToken, AuthError> {
     let claims = JwtClaims::new(params)?;
-    let mut header = jsonwebtoken::Header::default();
-    header.alg = jsonwebtoken::Algorithm::RS256;
+    let header = jsonwebtoken::Header {
+        alg: jsonwebtoken::Algorithm::RS256,
+        ..Default::default()
+    };
     let private_key =
         jsonwebtoken::EncodingKey::from_rsa_pem(&params.private_key)?;
     let token = jsonwebtoken::encode(&header, &claims, &private_key)?;
