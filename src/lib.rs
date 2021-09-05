@@ -123,7 +123,8 @@ fn get_installation_token(
 /// An installation access token is the primary method for
 /// authenticating with the GitHub API as an application.
 pub struct InstallationAccessToken {
-    /// The `reqwest::blocking::Client` used to periodically refresh the token.
+    /// The [`reqwest::blocking::Client`] used to periodically refresh
+    /// the token.
     ///
     /// This is made public so that users of the library can re-use
     /// this client for sending requests, but this is not required.
