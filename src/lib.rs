@@ -9,7 +9,6 @@
 //! use github_app_auth::{GithubAuthParams, InstallationAccessToken};
 //!
 //! # async fn wrapper() {
-//!
 //! // The token is mutable because the installation access token must be
 //! // periodically refreshed. See the `GithubAuthParams` documentation
 //! // for details on how to get the private key and the two IDs.
@@ -25,7 +24,6 @@
 //! let header = token.header().await.expect("failed to get authentication header");
 //!
 //! token.client.post("https://some-github-api-url").headers(header).send().await;
-//!
 //! # }  // End wrapper
 //! ```
 #![warn(missing_docs)]
