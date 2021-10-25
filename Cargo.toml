@@ -2,7 +2,7 @@
 name = "github-app-auth"
 version = "2.3.1-alpha.0"
 authors = ["Nicholas Bishop <nicholasbishop@gmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "Library for authenticating as a GitHub app"
 license = "Apache-2.0"
 readme = "README.md"
