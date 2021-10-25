@@ -27,7 +27,9 @@ fn get_var_bytes(name: &str) -> Result<Vec<u8>, BoxError> {
     Ok(value.as_bytes().into())
 }
 
-fn check_secrets(token: &mut InstallationAccessToken) -> Result<(), BoxError> {
+async fn check_secrets(
+    token: &mut InstallationAccessToken,
+) -> Result<(), BoxError> {
     // Format: owner/repo
     let repo = env::var("GITHUB_REPOSITORY")?;
 
@@ -46,10 +48,12 @@ fn check_secrets(token: &mut InstallationAccessToken) -> Result<(), BoxError> {
             "https://api.github.com/repos/{}/actions/secrets",
             repo
         ))
-        .headers(token.header()?)
-        .send()?
+        .headers(token.header().await?)
+        .send()
+        .await?
         .error_for_status()?
-        .json()?;
+        .json()
+        .await?;
 
     assert_eq!(resp, expected_response);
 
@@ -61,9 +65,9 @@ fn check_secrets(token: &mut InstallationAccessToken) -> Result<(), BoxError> {
 // This test requires read-only access to the repository secrets. It
 // is ignored by default, but the github CI runner enables ignored
 // tests.
-#[test]
+#[tokio::test]
 #[ignore]
-fn get_secrets() -> Result<(), BoxError> {
+async fn get_secrets() -> Result<(), BoxError> {
     simple_logger::init_with_level(log::Level::Info).unwrap();
 
     let private_key = get_var_bytes("TEST_PRIVATE_KEY")?;
@@ -75,14 +79,15 @@ fn get_secrets() -> Result<(), BoxError> {
         private_key,
         app_id,
         installation_id,
-    })?;
+    })
+    .await?;
 
-    check_secrets(&mut token)?;
+    check_secrets(&mut token).await?;
 
     // Set the refresh margin to a ridiculously large value to ensure
     // a refresh, then verify another request succeeds.
     token.refresh_safety_margin = Duration::weeks(1);
-    check_secrets(&mut token)?;
+    check_secrets(&mut token).await?;
 
     Ok(())
 }

@@ -8,6 +8,8 @@
 //! ```no_run
 //! use github_app_auth::{GithubAuthParams, InstallationAccessToken};
 //!
+//! # async fn wrapper() {
+//!
 //! // The token is mutable because the installation access token must be
 //! // periodically refreshed. See the `GithubAuthParams` documentation
 //! // for details on how to get the private key and the two IDs.
@@ -16,13 +18,15 @@
 //!     private_key: b"my private key".to_vec(),
 //!     app_id: 1234,
 //!     installation_id: 5678,
-//! }).expect("failed to get installation access token");
+//! }).await.expect("failed to get installation access token");
 //!
 //! // Getting the authentication header will automatically refresh
 //! // the token if necessary, but of course this operation can fail.
-//! let header = token.header().expect("failed to get authentication header");
+//! let header = token.header().await.expect("failed to get authentication header");
 //!
-//! token.client.post("https://some-github-api-url").headers(header).send();
+//! token.client.post("https://some-github-api-url").headers(header).send().await;
+//!
+//! # }  // End wrapper
 //! ```
 #![warn(missing_docs)]
 
@@ -94,8 +98,8 @@ struct RawInstallationAccessToken {
 ///
 /// Reference:
 /// developer.github.com/apps/building-github-apps/authenticating-with-github-apps
-fn get_installation_token(
-    client: &reqwest::blocking::Client,
+async fn get_installation_token(
+    client: &reqwest::Client,
     params: &GithubAuthParams,
 ) -> Result<RawInstallationAccessToken, AuthError> {
     let claims = JwtClaims::new(params)?;
@@ -115,20 +119,22 @@ fn get_installation_token(
         .post(&url)
         .bearer_auth(token)
         .header("Accept", MACHINE_MAN_PREVIEW)
-        .send()?
+        .send()
+        .await?
         .error_for_status()?
-        .json()?)
+        .json()
+        .await?)
 }
 
 /// An installation access token is the primary method for
 /// authenticating with the GitHub API as an application.
 pub struct InstallationAccessToken {
-    /// The [`reqwest::blocking::Client`] used to periodically refresh
+    /// The [`reqwest::Client`] used to periodically refresh
     /// the token.
     ///
     /// This is made public so that users of the library can re-use
     /// this client for sending requests, but this is not required.
-    pub client: reqwest::blocking::Client,
+    pub client: reqwest::Client,
 
     /// This time is subtracted from the expiration time to make it less
     /// likely that the token goes out of date just as a request is
@@ -143,13 +149,13 @@ pub struct InstallationAccessToken {
 impl InstallationAccessToken {
     /// Fetch an installation access token using the provided
     /// authentication parameters.
-    pub fn new(
+    pub async fn new(
         params: GithubAuthParams,
     ) -> Result<InstallationAccessToken, AuthError> {
-        let client = reqwest::blocking::Client::builder()
+        let client = reqwest::Client::builder()
             .user_agent(&params.user_agent)
             .build()?;
-        let raw = get_installation_token(&client, &params)?;
+        let raw = get_installation_token(&client, &params).await?;
         Ok(InstallationAccessToken {
             client,
             token: raw.token,
@@ -164,8 +170,8 @@ impl InstallationAccessToken {
     ///
     /// This method is mutable because the installation access token
     /// must be periodically refreshed.
-    pub fn header(&mut self) -> Result<HeaderMap, AuthError> {
-        self.refresh()?;
+    pub async fn header(&mut self) -> Result<HeaderMap, AuthError> {
+        self.refresh().await?;
         let mut headers = HeaderMap::new();
         let val = format!("token {}", self.token);
         headers.insert("Authorization", val.parse()?);
@@ -177,10 +183,11 @@ impl InstallationAccessToken {
         expires_at <= Utc::now()
     }
 
-    fn refresh(&mut self) -> Result<(), AuthError> {
+    async fn refresh(&mut self) -> Result<(), AuthError> {
         if self.needs_refresh() {
             info!("refreshing installation token");
-            let raw = get_installation_token(&self.client, &self.params)?;
+            let raw =
+                get_installation_token(&self.client, &self.params).await?;
             self.token = raw.token;
             self.expires_at = raw.expires_at;
         }
@@ -250,7 +257,7 @@ mod tests {
     fn test_needs_refresh() {
         use std::thread::sleep;
         let mut token = InstallationAccessToken {
-            client: reqwest::blocking::Client::new(),
+            client: reqwest::Client::new(),
             token: "myToken".into(),
             expires_at: Utc::now() + Duration::seconds(2),
             params: GithubAuthParams::default(),
