@@ -11,9 +11,9 @@ keywords = ["github", "app", "authentication"]
 categories = ["authentication", "web-programming"]
 
 [dependencies]
-chrono = { version = "0.4.19", default_features = false, features = ["serde"] }
+chrono = { version = "0.4.19", default_features = false, features = ["clock", "serde"] }
 http = { version = "0.2.5", default_features = false }
-jsonwebtoken = { version = "7.2.0", default_features = false }
+jsonwebtoken = { version = "8.0.0", default_features = false, features = ["use_pem"] }
 log = { version = "0.4.14", default_features = false }
 reqwest = { version = "0.11.6", default_features = false, features = ["json", "rustls-tls"] }
 serde = { version = "1.0.130", default_features = false, features = ["derive"] }
