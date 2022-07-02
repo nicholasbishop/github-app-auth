@@ -12,14 +12,14 @@ categories = ["authentication", "web-programming"]
 
 [dependencies]
 chrono = { version = "0.4.19", default_features = false, features = ["clock", "serde"] }
-http = { version = "0.2.5", default_features = false }
-jsonwebtoken = { version = "8.0.0", default_features = false, features = ["use_pem"] }
-log = { version = "0.4.14", default_features = false }
-reqwest = { version = "0.11.6", default_features = false, features = ["json", "rustls-tls"] }
-serde = { version = "1.0.130", default_features = false, features = ["derive"] }
-thiserror = { version = "1.0.30", default_features = false }
+http = { version = "0.2.8", default_features = false }
+jsonwebtoken = { version = "8.1.1", default_features = false, features = ["use_pem"] }
+log = { version = "0.4.17", default_features = false }
+reqwest = { version = "0.11.11", default_features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1.0.138", default_features = false, features = ["derive"] }
+thiserror = { version = "1.0.31", default_features = false }
 
 [dev-dependencies]
-serde_json = { version = "1.0.69", default_features = false }
+serde_json = { version = "1.0.82", default_features = false }
 simple_logger = { version = "2.1.0", default_features = false }
-tokio = { version = "1.13.0", features = ["full"] }
+tokio = { version = "1.19.2", features = ["full"] }
