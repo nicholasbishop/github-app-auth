@@ -3,6 +3,8 @@
 [![crates.io](https://img.shields.io/crates/v/github-app-auth.svg)](https://crates.io/crates/github-app-auth)
 [![Documentation](https://docs.rs/github-app-auth/badge.svg)](https://docs.rs/github-app-auth)
 
+⚠️ This crate is no longer maintained and the repository has been archived. If you are interested in taking over the crate, feel free to contact me: <nbishop@nbishop.net>.
+
 This is a small library for authenticating with the GitHub API as a
 GitHub app.
 
