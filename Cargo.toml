@@ -1,6 +1,9 @@
+[badges.maintenance]
+status = "deprecated"
+
 [package]
 name = "github-app-auth"
-version = "3.0.0"
+version = "3.0.1"
 authors = ["Nicholas Bishop <nicholasbishop@gmail.com>"]
 edition = "2021"
 description = "Library for authenticating as a GitHub app"
