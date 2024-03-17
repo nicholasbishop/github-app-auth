@@ -15,7 +15,7 @@ categories = ["authentication", "web-programming"]
 
 [dependencies]
 chrono = { version = "0.4.19", default-features = false, features = ["clock", "serde"] }
-http = { version = "0.2.8", default-features = false }
+http = { version = "1.1.0", default-features = false }
 jsonwebtoken = { version = "8.1.1", default-features = false, features = ["use_pem"] }
 log = { version = "0.4.17", default-features = false }
 reqwest = { version = "0.11.11", default-features = false, features = ["json", "rustls-tls"] }
